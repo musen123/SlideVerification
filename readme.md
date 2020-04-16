@@ -26,7 +26,7 @@ slide_element = driver.find_element_by_id('tcaptcha_drag_button')
 sv = SlideVerificationCode()
 #2、获取滑动距离
 distance = sv.get_slide_distance(slider_ele, background_ele)
-#3、误差校准(上面获取到的滑动距离*图片的缩放比，减去滑块在背景图的左边距问题)
+#3、误差校准(滑动距离*背景图的缩放比，减去滑块在背景图的左边距)
 distance = distance * (280.0 / 680.0) - 31
 #4、滑动验证码进行验证
 sv.slide_verification(driver, slide_element, distance)
