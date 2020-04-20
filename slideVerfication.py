@@ -15,7 +15,7 @@ import requests
 
 
 class SlideVerificationCode():
-    """滑动验证码解决方案"""
+    """滑动验证码破解"""
 
     def __init__(self, count=5, save_image=False):
         """
@@ -77,9 +77,12 @@ class SlideVerificationCode():
             with open(filename, "wb") as f:
                 f.write(response.content)
 
-    def get_slide_distance(self, slider_ele, background_ele, correct=0):
+    def get_element_slide_distance(self, slider_ele, background_ele, correct=0):
         """
-        计算滑块的记录
+        根据传入滑块，和背景的节点，计算滑块的距离
+
+        该方法只能计算 滑块和背景图都是一张完整图片的场景，
+        如果是通过多张小图拼接起来的背景图，该方法不适用，后续会补充一个专门针对处理该场景的方法
         :param slider_ele: 滑块图片的节点
         :type slider_ele: WebElement
         :param background_ele: 背景图的节点
@@ -138,6 +141,61 @@ class SlideVerificationCode():
             os.remove(slider)
             os.remove(background)
 
+        # 返回需要移动的位置距离
+        return left
+
+    def get_image_slide_dictance(self,slider_image, background_image,correct=0):
+        """
+        根据传入滑块，和背景的图片，计算滑块的距离
+
+        该方法只能计算 滑块和背景图都是一张完整图片的场景，
+        如果是通过多张小图拼接起来的背景图，该方法不适用，后续会补充一个专门针对处理该场景的方法
+        :param slider_iamge: 滑块图的图片
+        :type slider_image: str
+        :param background_image: 背景图的图片
+        :type background_image: str
+        :param correct:滑块缺口截图的修正值，默认为0,调试截图是否正确的情况下才会用
+        :type: int
+        :return: 背景图缺口位置的X轴坐标位置（缺口图片左边界位置）
+        """
+        # 读取进行色度图片，转换为numpy中的数组类型数据，
+        slider_pic = cv2.imread(slider_image, 0)
+        background_pic = cv2.imread(background_image, 0)
+        # 获取缺口图数组的形状 -->缺口图的宽和高
+        width, height = slider_pic.shape[::-1]
+        # 将处理之后的图片另存
+        slider01 = "slider01.jpg"
+        background_01 = "background01.jpg"
+        cv2.imwrite(background_01, background_pic)
+        cv2.imwrite(slider01, slider_pic)
+        # 读取另存的滑块图
+        slider_pic = cv2.imread(slider01)
+        # 进行色彩转换
+        slider_pic = cv2.cvtColor(slider_pic, cv2.COLOR_BGR2GRAY)
+        # 获取色差的绝对值
+        slider_pic = abs(255 - slider_pic)
+        # 保存图片
+        cv2.imwrite(slider01, slider_pic)
+        # 读取滑块
+        slider_pic = cv2.imread(slider01)
+        # 读取背景图
+        background_pic = cv2.imread(background_01)
+        # 比较两张图的重叠区域
+        result = cv2.matchTemplate(slider_pic, background_pic, cv2.TM_CCOEFF_NORMED)
+        # 获取图片的缺口位置
+        top, left = np.unravel_index(result.argmax(), result.shape)
+        # 背景图中的图片缺口坐标位置
+        print("当前滑块的缺口位置：", (left, top, left + width, top + height))
+        # 判读是否需求保存识别过程中的截图文件
+        if self.save_image:
+            # 截图滑块保存
+            # 进行坐标修正
+            loc = (left + correct, top + correct, left + width - correct, top + height - correct)
+            self.image_crop(background_image, loc)
+        else:
+            # 删除识别过程中保存的临时文件
+            os.remove(slider01)
+            os.remove(background_01)
         # 返回需要移动的位置距离
         return left
 
