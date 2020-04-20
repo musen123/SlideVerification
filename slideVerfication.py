@@ -58,8 +58,9 @@ class SlideVerificationCode():
         # 滑动失败的情况下，重试5次
         if start_url == end_url and self.count > 0:
             print("第{}次验证失败，开启重试")
-            self.slide_verification(driver, slide_element, distance)
             self.count -= 1
+            self.slide_verification(driver, slide_element, distance)
+
 
     def onload_save_img(self, url, filename="image.png"):
         """
