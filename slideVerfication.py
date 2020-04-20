@@ -49,7 +49,7 @@ class SlideVerificationCode():
         time.sleep(2)
         end_url = driver.current_url
         if start_url == end_url and self.count > 0:
-            print("第{}次验证失败，开启重试")
+            print("第{}次验证失败，开启重试".format(6-self.count))
             self.count -= 1
             self.slide_verification(driver, slide_element, distance)
 
